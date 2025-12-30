@@ -27,7 +27,7 @@ model VoucherMeta{
   updated_at DateTime @updatedAt
 }
 
-model Remdemption{
+model Redemption{
   id Int @id @default(autoincrement())
   on_chain_id String @unique //tx hash or event id
   user String  //wallet addr

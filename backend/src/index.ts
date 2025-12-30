@@ -1,6 +1,7 @@
 import express, {type Request, type Response} from 'express';
 import { env } from './config/env.config.js';
 import voucher_meta_routes from './routes/voucher-meta.routes.js'
+import redemption_routes from './routes/redemption.routes.js';
 
 const app = express();
 const PORT = env.PORT;
@@ -21,6 +22,7 @@ app.get(`${api_prefix}/health`, (req: Request, res: Response) => {
 
 //routes
 app.use(`${api_prefix}/voucher-meta`, voucher_meta_routes);
+app.use(`${api_prefix}/redemptions`, redemption_routes);
 
 //start 
 app.listen(PORT, () => {
