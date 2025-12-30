@@ -1,7 +1,13 @@
 import "@nomicfoundation/hardhat-mocha";
 import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-ethers-chai-matchers";
-import { configVariable, defineConfig } from "hardhat/config";
+import { defineConfig } from "hardhat/config";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";
+const SEPOLIA_PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY || "";
 
 export default defineConfig({
   solidity: {
@@ -32,8 +38,8 @@ export default defineConfig({
     sepolia: {
       type: "http",
       chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      url: SEPOLIA_RPC_URL,
+      accounts: SEPOLIA_PRIVATE_KEY ? [SEPOLIA_PRIVATE_KEY] : [],
     },
   },
   test: {

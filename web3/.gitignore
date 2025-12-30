@@ -19,5 +19,8 @@
 # Hardhat coverage reports
 /coverage
 
+#env
 .env
+
+#os stuff
 .DS_Store
