@@ -1,10 +1,7 @@
 import dotenv from 'dotenv';
-
 const config = dotenv.config();
-
 export const env = {
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
-    DATABASE_URL: process.env.DATABASE_URL,
 };
-
+//# sourceMappingURL=env.config.js.map

@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model VoucherMeta{
+  id Int @id @default(autoincrement())
+  token_id Int @unique
+  store String 
+  face_value Float
+  currency String @default("INR")
+  expiry_date DateTime?
+  image_url String?
+  description String?
+  created_by String //wallet addr
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Remdemption{
+  id Int @id @default(autoincrement())
+  on_chain_id String @unique //tx hash or event id
+  user String  //wallet addr
+  token_id Int
+  claim_code String
+  status Status @default(PENDING)
+  created_at DateTime @default(now())
+  used_at DateTime?
+}
+
+enum Status{
+  PENDING
+  USED
+  EXPIRED
+}
