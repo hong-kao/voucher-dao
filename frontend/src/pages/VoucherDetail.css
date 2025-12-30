@@ -1,0 +1,142 @@
+.voucher-detail-page {
+    padding: var(--space-3xl) 0;
+    min-height: 100vh;
+}
+
+.voucher-header {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: var(--space-2xl);
+    margin-bottom: var(--space-3xl);
+}
+
+.voucher-header-left {
+    position: relative;
+}
+
+.voucher-image-large {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+}
+
+.voucher-image-placeholder-large {
+    width: 100%;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+    border-radius: var(--radius-lg);
+    font-size: 5rem;
+}
+
+.voucher-header-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.voucher-title {
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--space-sm);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.voucher-face-value {
+    font-size: var(--font-size-2xl);
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: var(--space-lg);
+}
+
+.voucher-description {
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: var(--space-xl);
+    line-height: 1.6;
+}
+
+.voucher-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+}
+
+.stat-box .stat-label {
+    font-size: var(--font-size-xs);
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-box .stat-value {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: white;
+}
+
+.trading-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.trading-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-2xl);
+}
+
+.trading-tab {
+    padding: var(--space-lg);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.trading-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.trading-tab.active {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: transparent;
+}
+
+.trading-content {
+    animation: fadeIn var(--transition-base);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .voucher-header {
+        grid-template-columns: 1fr;
+    }
+
+    .voucher-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .trading-tabs {
+        grid-template-columns: 1fr;
+    }
+}

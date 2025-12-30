@@ -1,0 +1,145 @@
+.liquidity-interface {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.liquidity-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-2xl);
+}
+
+.tab {
+    padding: var(--space-lg);
+    background: rgba(255, 255, 255, 0.4);
+    border: 2px solid rgba(82, 49, 34, 0.1);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-title);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    color: rgba(82, 49, 34, 0.6);
+}
+
+.tab:hover,
+.tab.active {
+    background: var(--color-mid-brown);
+    color: white;
+    border-color: var(--color-mid-brown);
+}
+
+.liquidity-content {
+    animation: fadeIn var(--transition-base);
+}
+
+.liquidity-info {
+    margin-bottom: var(--space-lg);
+    text-align: center;
+}
+
+.lp-balance-card {
+    margin-top: var(--space-md);
+    padding: var(--space-lg);
+    background: linear-gradient(135deg, rgba(162, 104, 51, 0.1) 0%, rgba(227, 164, 88, 0.1) 100%);
+    border: 2px solid rgba(162, 104, 51, 0.2);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: center;
+}
+
+.lp-label {
+    font-family: var(--font-title);
+    font-size: 0.75rem;
+    color: rgba(82, 49, 34, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+}
+
+.lp-value {
+    font-family: var(--font-title);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-mid-brown);
+}
+
+.liquidity-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: rgba(255, 255, 255, 0.6);
+    border: 2px solid rgba(82, 49, 34, 0.1);
+    border-radius: var(--radius-md);
+}
+
+.liquidity-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-dark-brown);
+    font-family: var(--font-title);
+}
+
+.liquidity-input:focus {
+    outline: none;
+}
+
+.liquidity-input::placeholder {
+    color: rgba(82, 49, 34, 0.3);
+}
+
+.percentage-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+.pool-info {
+    padding: var(--space-md);
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-lg);
+}
+
+.liquidity-error {
+    margin-top: var(--space-md);
+    padding: var(--space-md);
+    background: rgba(127, 59, 45, 0.1);
+    border: 2px solid rgba(127, 59, 45, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--color-red-brown);
+    font-size: 0.875rem;
+    text-align: center;
+    font-family: var(--font-title);
+}
+
+.liquidity-success {
+    margin-top: var(--space-md);
+    padding: var(--space-md);
+    background: rgba(162, 104, 51, 0.1);
+    border: 2px solid rgba(162, 104, 51, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--color-mid-brown);
+    font-size: 0.875rem;
+    text-align: center;
+    font-family: var(--font-title);
+    font-weight: 600;
+}
+
+.liquidity-success a {
+    color: var(--color-dark-brown);
+    text-decoration: underline;
+    font-weight: 700;
+}
+
+.liquidity-success a:hover {
+    color: var(--color-mid-brown);
+}
