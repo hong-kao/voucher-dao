@@ -71,7 +71,7 @@ voucher-dao/
 
 ### Backend (`/backend`)
 - **Express.js** REST API
-- **Prisma ORM** with SQLite
+- **Prisma ORM** with PostgreSQL
 - Routes: voucher-meta, redemptions, uploads
 - Handles off-chain metadata and claim codes
 
