@@ -46,7 +46,7 @@ VoucherDAO creates a decentralized marketplace where gift vouchers become tradea
          │                       │                       │
          ▼                       ▼                       ▼
     ┌─────────┐            ┌─────────┐            ┌─────────────┐
-    │ MetaMask│            │SQLite DB│            │VoucherToken │
+    │ MetaMask│            │Pg DB    │            │VoucherToken │
     │ Wallet  │            │         │            │LiquidityPool│
     └─────────┘            └─────────┘            │   Escrow    │
                                                   └─────────────┘
