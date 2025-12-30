@@ -1,9 +1,17 @@
 import { useWallet } from '../hooks/useWallet';
 import './WalletConnect.css';
 
+const NETWORK_NAMES = {
+    '1': 'Mainnet',
+    '11155111': 'Sepolia',
+    '1337': 'Localhost',
+    '31337': 'Hardhat'
+};
+
 const WalletConnect = () => {
     const {
         account,
+        chainId,
         isConnecting,
         isConnected,
         connect,
@@ -17,6 +25,11 @@ const WalletConnect = () => {
     const formatAddress = (address) => {
         if (!address) return '';
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    };
+
+    const getNetworkName = () => {
+        if (!chainId) return '';
+        return NETWORK_NAMES[chainId] || `Chain ${chainId}`;
     };
 
     if (!isMetaMaskInstalled) {
@@ -45,6 +58,10 @@ const WalletConnect = () => {
     if (isConnected) {
         return (
             <div className="wallet-connect">
+                <div className="network-badge">
+                    <span className="network-indicator"></span>
+                    <span className="network-name">{getNetworkName()}</span>
+                </div>
                 <div className="wallet-info">
                     <div className="wallet-indicator"></div>
                     <span className="wallet-address">{formatAddress(account)}</span>

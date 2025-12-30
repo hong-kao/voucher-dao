@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import VoucherDetail from './pages/VoucherDetail';
 import Swap from './pages/Swap';
 import Liquidity from './pages/Liquidity';
+import MyVouchers from './pages/MyVouchers';
 import './styles/index.css';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
                         <Route path="/voucher/:tokenId" element={<VoucherDetail />} />
                         <Route path="/swap" element={<Swap />} />
                         <Route path="/liquidity" element={<Liquidity />} />
+                        <Route path="/my-vouchers" element={<MyVouchers />} />
                     </Routes>
                 </main>
 

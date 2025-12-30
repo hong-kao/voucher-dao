@@ -49,12 +49,51 @@
     right: 0;
     margin-top: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: rgba(127, 59, 45, 0.1);
-    border: 2px solid rgba(127, 59, 45, 0.3);
-    border-radius: var(--radius-md);
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: var(--radius-sm);
     font-size: 0.75rem;
-    color: var(--color-red-brown);
+    color: #dc3545;
     white-space: nowrap;
+}
+
+.network-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    border-radius: var(--radius-sm);
+    margin-right: var(--space-sm);
+}
+
+.network-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #28a745;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.network-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #28a745;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 @media (max-width: 768px) {

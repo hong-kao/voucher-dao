@@ -15,6 +15,7 @@ const Navbar = () => {
                         <Link to="/" className="nav-link">EXPLORE</Link>
                         <Link to="/swap" className="nav-link">SWAP</Link>
                         <Link to="/liquidity" className="nav-link">LIQUIDITY</Link>
+                        <Link to="/my-vouchers" className="nav-link">MY VOUCHERS</Link>
                     </div>
 
                     <WalletConnect />
