@@ -9,6 +9,18 @@ import {
     handleContractError
 } from '../utils/contracts';
 
+// Fallback provider using injected wallet (MetaMask) if available
+const getFallbackProvider = () => {
+    try {
+        if (typeof window !== 'undefined' && window.ethereum) {
+            return new ethers.providers.Web3Provider(window.ethereum);
+        }
+        return null;
+    } catch {
+        return null;
+    }
+};
+
 export const useContract = (signer, provider) => {
     const [voucherToken, setVoucherToken] = useState(null);
     const [liquidityPool, setLiquidityPool] = useState(null);
@@ -18,8 +30,10 @@ export const useContract = (signer, provider) => {
 
     // Initialize contracts
     useEffect(() => {
-        if (signer || provider) {
-            const signerOrProvider = signer || provider;
+        // Use passed provider/signer, or fallback to public RPC for read-only
+        const signerOrProvider = signer || provider || getFallbackProvider();
+
+        if (signerOrProvider) {
             setVoucherToken(getVoucherTokenContract(signerOrProvider));
             setLiquidityPool(getLiquidityPoolContract(signerOrProvider));
             setEscrow(getEscrowContract(signerOrProvider));

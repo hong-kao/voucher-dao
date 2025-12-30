@@ -18,7 +18,7 @@ const Home = () => {
 
     useEffect(() => {
         loadVouchers();
-    }, []);
+    }, [contract.getReserves]); // Re-run when contract is initialized
 
     const loadVouchers = async () => {
         setIsLoading(true);

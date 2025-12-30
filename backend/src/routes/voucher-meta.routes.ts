@@ -5,11 +5,11 @@ const router = Router();
 
 //get -> all voucher types
 router.get("/", async (req: Request, res: Response) => {
-    try{
+    try {
         const { store, currency } = req.query;
 
         const vouchers = await prisma.voucherMeta.findMany({
-            where:{
+            where: {
                 ...(store && {
                     store: {
                         contains: store as string,
@@ -27,10 +27,24 @@ router.get("/", async (req: Request, res: Response) => {
             }
         });
 
+        // Transform to camelCase for frontend compatibility
+        const transformedVouchers = vouchers.map(v => ({
+            tokenId: v.token_id,
+            store: v.store,
+            faceValue: v.face_value,
+            currency: v.currency,
+            expiryDate: v.expiry_date,
+            imageUrl: v.image_url,
+            description: v.description,
+            createdBy: v.created_by,
+            createdAt: v.created_at,
+            updatedAt: v.updated_at,
+        }));
+
         res.json({
-            items: vouchers
+            items: transformedVouchers
         });
-    }catch(err: any){
+    } catch (err: any) {
         console.error("Error fetching vouchers! -> ", err);
         res.status(500).json({
             error: "Failed to fetch vouchers"
@@ -40,10 +54,10 @@ router.get("/", async (req: Request, res: Response) => {
 
 //get - single voucher
 router.get("/:tokenId", async (req: Request, res: Response) => {
-    try{
+    try {
         const token_id = parseInt(req.params.tokenId as string, 10);
 
-        if(isNaN(token_id)){
+        if (isNaN(token_id)) {
             res.status(400).json({
                 error: "Invalid token"
             });
@@ -51,20 +65,32 @@ router.get("/:tokenId", async (req: Request, res: Response) => {
         }
 
         const voucher = await prisma.voucherMeta.findUnique({
-            where:{
+            where: {
                 token_id
             }
         });
 
-        if(!voucher){
+        if (!voucher) {
             res.status(400).json({
                 error: "Voucher not found!"
             });
             return;
         }
 
-        res.json(voucher);
-    }catch(err: any){
+        // Transform to camelCase for frontend compatibility
+        res.json({
+            tokenId: voucher.token_id,
+            store: voucher.store,
+            faceValue: voucher.face_value,
+            currency: voucher.currency,
+            expiryDate: voucher.expiry_date,
+            imageUrl: voucher.image_url,
+            description: voucher.description,
+            createdBy: voucher.created_by,
+            createdAt: voucher.created_at,
+            updatedAt: voucher.updated_at,
+        });
+    } catch (err: any) {
         console.error("Error fetching the required voucher: ", err);
         res.status(500).json({
             error: "Error while fetching voucher"
@@ -74,10 +100,10 @@ router.get("/:tokenId", async (req: Request, res: Response) => {
 
 //post - create a new voucher meta
 router.post("/", async (req: Request, res: Response) => {
-    try{
-        const {token_id, store, face_value, currency, expiry_date, image_url, description, created_by } = req.body;
+    try {
+        const { token_id, store, face_value, currency, expiry_date, image_url, description, created_by } = req.body;
 
-        if(!token_id || !store || !face_value || !created_by){
+        if (!token_id || !store || !face_value || !created_by) {
             res.status(400).json({
                 error: "Missing required fields"
             });
@@ -85,7 +111,7 @@ router.post("/", async (req: Request, res: Response) => {
         }
 
         const voucher = await prisma.voucherMeta.create({
-            data:{
+            data: {
                 token_id: parseInt(token_id, 10),
                 store,
                 face_value: parseFloat(face_value),
@@ -98,9 +124,9 @@ router.post("/", async (req: Request, res: Response) => {
         });
 
         res.status(201).json(voucher);
-    }catch(err: any){
+    } catch (err: any) {
         console.error("Error creating voucher: ", err);
-        if(err.code === "P2002"){
+        if (err.code === "P2002") {
             res.status(409).json({
                 error: "Voucher with this token already exists!"
             });
@@ -115,15 +141,15 @@ router.post("/", async (req: Request, res: Response) => {
 
 //put - update voucher meta
 router.put("/:tokenId", async (req: Request, res: Response) => {
-    try{
+    try {
         const token_id = parseInt(req.params.tokenId as string, 10);
         const { store, face_value, currency, expiry_date, image_url, description } = req.body;
 
         const voucher = await prisma.voucherMeta.update({
-            where:{
+            where: {
                 token_id
             },
-            data:{
+            data: {
                 ...(store && { store }),
                 ...(face_value && { face_value: parseFloat(face_value) }),
                 ...(currency && { currency }),
@@ -134,10 +160,10 @@ router.put("/:tokenId", async (req: Request, res: Response) => {
         });
 
         res.json(voucher);
-    }catch(err: any){
+    } catch (err: any) {
         console.error("Error updating voucher: ", err);
 
-        if(err.code === "P2025"){
+        if (err.code === "P2025") {
             res.status(404).json({
                 error: "Voucher not found"
             });
@@ -152,20 +178,20 @@ router.put("/:tokenId", async (req: Request, res: Response) => {
 
 //delete - delete voucher meta data
 router.delete("/:tokenId", async (req: Request, res: Response) => {
-    try{
+    try {
         const token_id = parseInt(req.params.tokenId as string, 10);
 
         await prisma.voucherMeta.delete({
-            where:{
+            where: {
                 token_id
             }
         });
 
         res.status(204).send();
-    }catch(err: any){
+    } catch (err: any) {
         console.error("Error while deleting voucher: ", err);
 
-        if(err.code === "P2025"){
+        if (err.code === "P2025") {
             res.status(404).json({
                 error: "Voucher not found"
             });

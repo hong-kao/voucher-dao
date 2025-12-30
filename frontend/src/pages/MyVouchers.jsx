@@ -192,45 +192,59 @@ const MyVouchers = () => {
                         </div>
                     ) : (
                         <div className="vouchers-grid">
-                            {userVouchers.map(voucher => (
-                                <div key={voucher.tokenId} className="voucher-card glass-card">
-                                    <div className="voucher-header">
-                                        {voucher.imageUrl ? (
-                                            <img src={voucher.imageUrl} alt={voucher.store} className="voucher-image" />
-                                        ) : (
-                                            <div className="voucher-image-placeholder">
-                                                <span>{voucher.store?.charAt(0) || 'V'}</span>
+                            {userVouchers.map(voucher => {
+                                const storeName = voucher.store || 'Unknown';
+                                const getGradient = (name) => {
+                                    const gradients = {
+                                        'Amazon': 'linear-gradient(135deg, #FF9900 0%, #FFB84D 100%)',
+                                        'Zara': 'linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%)',
+                                        'Starbucks': 'linear-gradient(135deg, #00704A 0%, #1E9964 100%)',
+                                    };
+                                    return gradients[name] || 'linear-gradient(135deg, var(--color-light-brown), var(--color-mid-brown))';
+                                };
+
+                                return (
+                                    <div key={voucher.tokenId} className="voucher-card glass-card">
+                                        <div className="voucher-header">
+                                            <div className="voucher-image-container-small" style={{ background: voucher.imageUrl ? 'transparent' : getGradient(storeName) }}>
+                                                {voucher.imageUrl ? (
+                                                    <img src={voucher.imageUrl} alt={voucher.store} className="voucher-image" />
+                                                ) : (
+                                                    <div className="voucher-image-placeholder">
+                                                        <span>{storeName.toUpperCase()}</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                        <div className="voucher-info">
-                                            <h3 className="voucher-name">{voucher.store?.toUpperCase() || 'VOUCHER'}</h3>
-                                            <p className="voucher-value">
-                                                {voucher.faceValue?.toLocaleString() || voucher.face_value?.toLocaleString() || '0'} {voucher.currency || 'INR'}
-                                            </p>
+                                            <div className="voucher-info">
+                                                <h3 className="voucher-name">{storeName.toUpperCase()}</h3>
+                                                <p className="voucher-face-value">
+                                                    ₹{voucher.faceValue?.toLocaleString() || voucher.face_value?.toLocaleString() || '0'} {voucher.currency || 'INR'}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="voucher-balance">
-                                        <span className="balance-label">YOUR BALANCE</span>
-                                        <span className="balance-value">{formatBalance(voucher.balance)}</span>
-                                    </div>
+                                        <div className="voucher-balance">
+                                            <span className="balance-label">YOUR BALANCE</span>
+                                            <span className="balance-value">{formatBalance(voucher.balance)}</span>
+                                        </div>
 
-                                    <button
-                                        onClick={() => handleRedeem(voucher.tokenId, voucher.store)}
-                                        disabled={redeemingId === voucher.tokenId}
-                                        className="btn btn-primary w-full"
-                                    >
-                                        {redeemingId === voucher.tokenId ? (
-                                            <>
-                                                <span className="spinner"></span>
-                                                REDEEMING...
-                                            </>
-                                        ) : (
-                                            'REDEEM VOUCHER'
-                                        )}
-                                    </button>
-                                </div>
-                            ))}
+                                        <button
+                                            onClick={() => handleRedeem(voucher.tokenId, voucher.store)}
+                                            disabled={redeemingId === voucher.tokenId}
+                                            className="btn btn-primary w-full"
+                                        >
+                                            {redeemingId === voucher.tokenId ? (
+                                                <>
+                                                    <span className="spinner"></span>
+                                                    REDEEMING...
+                                                </>
+                                            ) : (
+                                                'REDEEM VOUCHER'
+                                            )}
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </section>
