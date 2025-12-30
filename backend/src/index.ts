@@ -4,11 +4,18 @@ import voucher_meta_routes from './routes/voucher-meta.routes.js'
 import redemption_routes from './routes/redemption.routes.js';
 import upload_routes from './routes/upload.routes.js';
 import path from 'node:path';
+import cors from 'cors';
 
 const app = express();
 const PORT = env.PORT;
 
 const api_prefix = "/api/v1";
+
+//cors config
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+}));
 
 //middleware
 app.use(express.json());

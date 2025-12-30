@@ -89,7 +89,7 @@ router.delete("/:filename", (req: Request, res: Response) => {
     }catch(err: any){
         console.error("Error while deleting file: ", err);
         res.status(500).json({
-            erorr: "Failed to delete file"
+            error: "Failed to delete file"
         });
     }
 });
