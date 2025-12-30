@@ -5,6 +5,7 @@ import * as path from "path";
 
 dotenv.config();
 
+// Deployed contract addresses
 const VOUCHER_TOKEN_ADDRESS = "0xB9BC7bEd1cC50ce4D5faE0b128138f59a0fa6Dc7";
 const LIQUIDITY_POOL_ADDRESS = "0x13dFE2fea862f88015698B70f0127c97014aAac3";
 
@@ -24,7 +25,7 @@ async function main() {
     const balance = await provider.getBalance(deployerAddress);
     console.log("Balance:", ethers.formatEther(balance), "ETH");
 
-    //read artifacts
+    // Read artifacts
     const artifactsDir = path.join(process.cwd(), "artifacts", "contracts");
 
     const voucherTokenArtifact = JSON.parse(
@@ -37,28 +38,49 @@ async function main() {
     const voucherToken = new ethers.Contract(VOUCHER_TOKEN_ADDRESS, voucherTokenArtifact.abi, signer);
     const liquidityPool = new ethers.Contract(LIQUIDITY_POOL_ADDRESS, liquidityPoolArtifact.abi, signer);
 
-    // Add liquidity
-    console.log("\nAdding initial liquidity...");
+    console.log("\n=== Adding Liquidity ===\n");
 
-    let tx = await voucherToken.setApprovalForAll(LIQUIDITY_POOL_ADDRESS, true);
-    await tx.wait();
-    console.log("Approved LiquidityPool");
+    try {
+        console.log("1. Approving LiquidityPool...");
+        let tx = await voucherToken.setApprovalForAll(LIQUIDITY_POOL_ADDRESS, true);
+        console.log(`   Tx hash: ${tx.hash}`);
+        console.log(`   https://sepolia.etherscan.io/tx/${tx.hash}`);
+        console.log("   Waiting for confirmation...");
+        await tx.wait();
+        console.log("   ✓ Approved!\n");
 
-    tx = await liquidityPool.addLiquidity(1, 50, { value: ethers.parseEther("0.05") });
-    await tx.wait();
-    console.log("Added liquidity for voucher 1: 50 vouchers + 0.05 ETH");
+        console.log("2. Adding liquidity for voucher 1 (50 vouchers + 0.05 ETH)...");
+        tx = await liquidityPool.addLiquidity(1, 50, { value: ethers.parseEther("0.05") });
+        console.log(`   Tx hash: ${tx.hash}`);
+        console.log(`   https://sepolia.etherscan.io/tx/${tx.hash}`);
+        console.log("   Waiting for confirmation...");
+        await tx.wait();
+        console.log("   ✓ Liquidity added!\n");
 
-    tx = await liquidityPool.addLiquidity(2, 50, { value: ethers.parseEther("0.03") });
-    await tx.wait();
-    console.log("Added liquidity for voucher 2: 50 vouchers + 0.03 ETH");
+        console.log("3. Adding liquidity for voucher 2 (50 vouchers + 0.03 ETH)...");
+        tx = await liquidityPool.addLiquidity(2, 50, { value: ethers.parseEther("0.03") });
+        console.log(`   Tx hash: ${tx.hash}`);
+        console.log(`   https://sepolia.etherscan.io/tx/${tx.hash}`);
+        console.log("   Waiting for confirmation...");
+        await tx.wait();
+        console.log("   ✓ Liquidity added!\n");
 
-    console.log("\n✅ Liquidity added successfully!");
+        // Check reserves
+        const reserves1 = await liquidityPool.getReserves(1);
+        const reserves2 = await liquidityPool.getReserves(2);
 
-    //check reserves
-    const reserves1 = await liquidityPool.getReserves(1);
-    const reserves2 = await liquidityPool.getReserves(2);
-    console.log("\nPool 1 reserves:", reserves1[0].toString(), "vouchers,", ethers.formatEther(reserves1[1]), "ETH");
-    console.log("Pool 2 reserves:", reserves2[0].toString(), "vouchers,", ethers.formatEther(reserves2[1]), "ETH");
+        console.log("=== Pool Status ===");
+        console.log(`Pool 1: ${reserves1[0].toString()} vouchers, ${ethers.formatEther(reserves1[1])} ETH`);
+        console.log(`Pool 2: ${reserves2[0].toString()} vouchers, ${ethers.formatEther(reserves2[1])} ETH`);
+        console.log("\n✅ All done!");
+
+    } catch (error: any) {
+        console.error("\n❌ Error:", error.message);
+        if (error.transaction) {
+            console.error("Failed tx:", error.transaction.hash);
+        }
+        throw error;
+    }
 }
 
 main()
