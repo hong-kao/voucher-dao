@@ -1,8 +1,9 @@
-import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
+import "@nomicfoundation/hardhat-mocha";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-ethers-chai-matchers";
 import { configVariable, defineConfig } from "hardhat/config";
 
 export default defineConfig({
-  plugins: [hardhatToolboxMochaEthersPlugin],
   solidity: {
     profiles: {
       default: {
@@ -33,6 +34,11 @@ export default defineConfig({
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
       accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+    },
+  },
+  test: {
+    mocha: {
+      timeout: 40000,
     },
   },
 });
