@@ -87,12 +87,16 @@ const SwapInterface = ({ tokenId, voucherName }) => {
         if (balance === '0') return;
 
         try {
-            let maxAmount = ethers.BigNumber.from(balance);
-            if (swapDirection === 'ethToVoucher') {
+            if (swapDirection === 'voucherToEth') {
+                // Vouchers are whole numbers (ERC1155)
+                setInputAmount(balance);
+            } else {
+                // ETH has 18 decimals
+                let maxAmount = ethers.BigNumber.from(balance);
                 const gasReserve = ethers.utils.parseEther('0.01');
                 maxAmount = maxAmount.gt(gasReserve) ? maxAmount.sub(gasReserve) : ethers.BigNumber.from(0);
+                setInputAmount(ethers.utils.formatEther(maxAmount));
             }
-            setInputAmount(ethers.utils.formatEther(maxAmount));
         } catch (err) {
             console.error('Error setting max:', err);
         }
@@ -151,7 +155,13 @@ const SwapInterface = ({ tokenId, voucherName }) => {
 
     const formatBalance = (bal) => {
         try {
-            return parseFloat(ethers.utils.formatEther(bal || '0')).toFixed(4);
+            if (swapDirection === 'voucherToEth') {
+                // Vouchers are whole numbers (ERC1155)
+                return parseInt(bal || '0').toString();
+            } else {
+                // ETH has 18 decimals
+                return parseFloat(ethers.utils.formatEther(bal || '0')).toFixed(4);
+            }
         } catch {
             return '0';
         }
