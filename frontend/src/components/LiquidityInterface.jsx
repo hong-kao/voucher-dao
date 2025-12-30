@@ -25,17 +25,24 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
         const loadData = async () => {
             if (!tokenId) return;
 
-            const res = await contract.getReserves(tokenId);
-            setReserves(res);
+            try {
+                const res = await contract.getReserves(tokenId);
+                setReserves({
+                    voucherReserve: res.voucherReserve?.toString() || '0',
+                    ethReserve: res.ethReserve?.toString() || '0'
+                });
 
-            if (account) {
-                const vBal = await contract.getVoucherBalance(account, tokenId);
-                const eBal = await provider.getBalance(account);
-                const lpBal = await contract.getLpBalance(account, tokenId);
+                if (account) {
+                    const vBal = await contract.getVoucherBalance(account, tokenId);
+                    const eBal = await provider.getBalance(account);
+                    const lpBal = await contract.getLPShares(account, tokenId);
 
-                setVoucherBalance(vBal.toString());
-                setEthBalance(eBal.toString());
-                setLpBalance(lpBal.toString());
+                    setVoucherBalance(vBal?.toString() || '0');
+                    setEthBalance(eBal?.toString() || '0');
+                    setLpBalance(lpBal?.toString() || '0');
+                }
+            } catch (err) {
+                console.error('Failed to load data:', err);
             }
         };
 
@@ -86,7 +93,10 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
             setTxHash(tx.hash);
 
             const res = await contract.getReserves(tokenId);
-            setReserves(res);
+            setReserves({
+                voucherReserve: res.voucherReserve?.toString() || '0',
+                ethReserve: res.ethReserve?.toString() || '0'
+            });
             setVoucherAmount('');
             setEthAmount('');
         } catch (err) {
@@ -112,12 +122,15 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
         setTxHash('');
 
         try {
-            const lpAmountBN = ethers.utils.parseEther(lpAmount);
+            const lpAmountBN = ethers.BigNumber.from(lpAmount);
             const tx = await contract.removeLiquidity(tokenId, lpAmountBN);
             setTxHash(tx.hash);
 
             const res = await contract.getReserves(tokenId);
-            setReserves(res);
+            setReserves({
+                voucherReserve: res.voucherReserve?.toString() || '0',
+                ethReserve: res.ethReserve?.toString() || '0'
+            });
             setLpAmount('');
         } catch (err) {
             setError(err.message || 'Failed to remove liquidity');
@@ -126,19 +139,41 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
         }
     };
 
+    const formatBalance = (bal) => {
+        try {
+            return parseFloat(ethers.utils.formatEther(bal || '0')).toFixed(4);
+        } catch {
+            return '0';
+        }
+    };
+
     const handleMaxVoucher = () => {
         setVoucherAmount(ethers.utils.formatEther(voucherBalance));
     };
 
     const handleMaxETH = () => {
-        const balanceBN = ethers.BigNumber.from(ethBalance);
-        const gasReserve = ethers.utils.parseEther('0.01');
-        const maxAmount = balanceBN.sub(gasReserve);
-        setEthAmount(ethers.utils.formatEther(maxAmount));
+        try {
+            const balanceBN = ethers.BigNumber.from(ethBalance);
+            const gasReserve = ethers.utils.parseEther('0.01');
+            const maxAmount = balanceBN.gt(gasReserve) ? balanceBN.sub(gasReserve) : ethers.BigNumber.from(0);
+            setEthAmount(ethers.utils.formatEther(maxAmount));
+        } catch (err) {
+            console.error('Error setting max ETH:', err);
+        }
     };
 
     const handleMaxLP = () => {
-        setLpAmount(ethers.utils.formatEther(lpBalance));
+        setLpAmount(lpBalance);
+    };
+
+    const handlePercentLP = (percent) => {
+        try {
+            const lpBN = ethers.BigNumber.from(lpBalance);
+            const amount = lpBN.mul(percent).div(100);
+            setLpAmount(amount.toString());
+        } catch (err) {
+            console.error('Error calculating percent:', err);
+        }
     };
 
     return (
@@ -170,7 +205,7 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
                         <div className="input-header">
                             <label className="input-label">{voucherName.toUpperCase()} AMOUNT</label>
                             <span className="balance-label">
-                                BALANCE: {parseFloat(ethers.utils.formatEther(voucherBalance || '0')).toFixed(4)}
+                                BALANCE: {formatBalance(voucherBalance)}
                             </span>
                         </div>
                         <div className="liquidity-input-wrapper">
@@ -189,7 +224,7 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
                         <div className="input-header">
                             <label className="input-label">ETH AMOUNT</label>
                             <span className="balance-label">
-                                BALANCE: {parseFloat(ethers.utils.formatEther(ethBalance || '0')).toFixed(4)}
+                                BALANCE: {formatBalance(ethBalance)}
                             </span>
                         </div>
                         <div className="liquidity-input-wrapper">
@@ -237,23 +272,21 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
                             REMOVE YOUR LIQUIDITY FROM THE POOL
                         </p>
                         <div className="lp-balance-card">
-                            <span className="lp-label">YOUR LP TOKENS</span>
-                            <span className="lp-value">
-                                {parseFloat(ethers.utils.formatEther(lpBalance || '0')).toFixed(6)}
-                            </span>
+                            <span className="lp-label">YOUR LP SHARES</span>
+                            <span className="lp-value">{lpBalance}</span>
                         </div>
                     </div>
 
                     <div className="input-group">
                         <div className="input-header">
-                            <label className="input-label">LP TOKEN AMOUNT</label>
+                            <label className="input-label">LP SHARES AMOUNT</label>
                         </div>
                         <div className="liquidity-input-wrapper">
                             <input
                                 type="number"
                                 value={lpAmount}
                                 onChange={(e) => setLpAmount(e.target.value)}
-                                placeholder="0.0"
+                                placeholder="0"
                                 className="liquidity-input"
                             />
                             <button onClick={handleMaxLP} className="max-button">MAX</button>
@@ -264,12 +297,7 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
                         {[25, 50, 75, 100].map(percent => (
                             <button
                                 key={percent}
-                                onClick={() => {
-                                    const amount = ethers.BigNumber.from(lpBalance)
-                                        .mul(percent)
-                                        .div(100);
-                                    setLpAmount(ethers.utils.formatEther(amount));
-                                }}
+                                onClick={() => handlePercentLP(percent)}
                                 className="btn btn-secondary btn-sm"
                             >
                                 {percent}%
@@ -301,7 +329,7 @@ const LiquidityInterface = ({ tokenId, voucherName }) => {
                 <div className="liquidity-success">
                     TRANSACTION SUCCESSFUL!{' '}
                     <a
-                        href={`https://etherscan.io/tx/${txHash}`}
+                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                     >

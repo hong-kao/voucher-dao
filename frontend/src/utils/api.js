@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
 
 /**
  * Generic fetch wrapper with error handling
@@ -72,25 +72,25 @@ export const uploadImage = async (file) => {
 };
 
 /**
- * Get user statistics (optional)
+ * Get redemptions for a user
  */
-export const getUserStats = async (address) => {
-    return await apiFetch(`/user/${address}/summary`);
+export const getRedemptions = async (userAddress) => {
+    return await apiFetch(`/redemptions/${userAddress}`);
 };
 
 /**
- * Auth: Get nonce for signing
+ * Create a redemption record (called after on-chain redeem)
  */
-export const getNonce = async () => {
-    return await apiFetch('/auth/nonce');
-};
-
-/**
- * Auth: Verify signature and login
- */
-export const verifySignature = async (address, nonce, signature) => {
-    return await apiFetch('/auth/verify', {
+export const createRedemption = async (data) => {
+    return await apiFetch('/redemptions', {
         method: 'POST',
-        body: JSON.stringify({ address, nonce, signature }),
+        body: JSON.stringify(data),
     });
+};
+
+/**
+ * Health check
+ */
+export const healthCheck = async () => {
+    return await apiFetch('/health');
 };

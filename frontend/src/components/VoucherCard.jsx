@@ -3,41 +3,51 @@ import { ethers } from 'ethers';
 import './VoucherCard.css';
 
 const VoucherCard = ({ voucher, reserves }) => {
-    const { tokenId, store, faceValue, currency, imageUrl } = voucher;
+    const { tokenId, store, faceValue, face_value, currency, imageUrl, image_url } = voucher;
     const { voucherReserve, ethReserve } = reserves || {};
 
     const calculatePrice = () => {
-        if (!voucherReserve || !ethReserve || voucherReserve === '0') {
+        if (!voucherReserve || !ethReserve || voucherReserve === '0' || voucherReserve === 0n) {
             return 'N/A';
         }
 
-        const price = ethers.BigNumber.from(ethReserve)
-            .mul(ethers.constants.WeiPerEther)
-            .div(ethers.BigNumber.from(voucherReserve));
-
-        return parseFloat(ethers.utils.formatEther(price)).toFixed(6);
+        try {
+            const voucherBN = ethers.BigNumber.from(voucherReserve.toString());
+            const ethBN = ethers.BigNumber.from(ethReserve.toString());
+            const price = ethBN.mul(ethers.constants.WeiPerEther).div(voucherBN);
+            return parseFloat(ethers.utils.formatEther(price)).toFixed(6);
+        } catch {
+            return 'N/A';
+        }
     };
 
     const formatLiquidity = () => {
         if (!ethReserve) return 'NO LIQUIDITY';
 
-        const eth = parseFloat(ethers.utils.formatEther(ethReserve));
-        if (eth < 0.01) return 'LOW LIQUIDITY';
-        if (eth < 1) return `${eth.toFixed(3)} ETH`;
-        return `${eth.toFixed(2)} ETH`;
+        try {
+            const eth = parseFloat(ethers.utils.formatEther(ethReserve.toString()));
+            if (eth < 0.01) return 'LOW LIQUIDITY';
+            if (eth < 1) return `${eth.toFixed(3)} ETH`;
+            return `${eth.toFixed(2)} ETH`;
+        } catch {
+            return 'NO LIQUIDITY';
+        }
     };
 
     const price = calculatePrice();
     const liquidity = formatLiquidity();
+    const displayValue = faceValue || face_value || 0;
+    const displayImage = imageUrl || image_url;
+    const storeName = store || 'Unknown';
 
     return (
         <Link to={`/voucher/${tokenId}`} className="voucher-card glass-card">
             <div className="voucher-image-container">
-                {imageUrl ? (
-                    <img src={imageUrl} alt={store} className="voucher-image" />
+                {displayImage ? (
+                    <img src={displayImage} alt={storeName} className="voucher-image" />
                 ) : (
                     <div className="voucher-image-placeholder">
-                        <span className="placeholder-text">{store.charAt(0)}</span>
+                        <span className="placeholder-text">{storeName.charAt(0)}</span>
                     </div>
                 )}
                 <div className="voucher-badge">
@@ -46,9 +56,9 @@ const VoucherCard = ({ voucher, reserves }) => {
             </div>
 
             <div className="voucher-content">
-                <h3 className="voucher-store">{store.toUpperCase()}</h3>
+                <h3 className="voucher-store">{storeName.toUpperCase()}</h3>
                 <p className="voucher-value">
-                    {faceValue.toLocaleString()} {currency}
+                    {displayValue.toLocaleString()} {currency || 'INR'}
                 </p>
 
                 <div className="voucher-stats">

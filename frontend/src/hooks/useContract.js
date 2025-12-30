@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import {
     getVoucherTokenContract,
-    getVoucherPoolContract,
+    getLiquidityPoolContract,
+    getEscrowContract,
     checkApproval,
     approvePool,
     handleContractError
@@ -10,7 +11,8 @@ import {
 
 export const useContract = (signer, provider) => {
     const [voucherToken, setVoucherToken] = useState(null);
-    const [voucherPool, setVoucherPool] = useState(null);
+    const [liquidityPool, setLiquidityPool] = useState(null);
+    const [escrow, setEscrow] = useState(null);
     const [isApproved, setIsApproved] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -19,10 +21,12 @@ export const useContract = (signer, provider) => {
         if (signer || provider) {
             const signerOrProvider = signer || provider;
             setVoucherToken(getVoucherTokenContract(signerOrProvider));
-            setVoucherPool(getVoucherPoolContract(signerOrProvider));
+            setLiquidityPool(getLiquidityPoolContract(signerOrProvider));
+            setEscrow(getEscrowContract(signerOrProvider));
         } else {
             setVoucherToken(null);
-            setVoucherPool(null);
+            setLiquidityPool(null);
+            setEscrow(null);
         }
     }, [signer, provider]);
 
@@ -70,36 +74,60 @@ export const useContract = (signer, provider) => {
 
     // Get pool reserves
     const getReserves = useCallback(async (tokenId) => {
-        if (!voucherPool) return { voucherReserve: '0', ethReserve: '0' };
+        if (!liquidityPool) return { voucherReserve: ethers.BigNumber.from(0), ethReserve: ethers.BigNumber.from(0) };
 
         try {
-            const [voucherReserve, ethReserve] = await voucherPool.getReserves(tokenId);
+            const [voucherReserve, ethReserve] = await liquidityPool.getReserves(tokenId);
             return { voucherReserve, ethReserve };
         } catch (error) {
             console.error('Failed to get reserves:', error);
-            return { voucherReserve: '0', ethReserve: '0' };
+            return { voucherReserve: ethers.BigNumber.from(0), ethReserve: ethers.BigNumber.from(0) };
         }
-    }, [voucherPool]);
+    }, [liquidityPool]);
 
-    // Get LP balance
-    const getLpBalance = useCallback(async (userAddress, tokenId) => {
-        if (!voucherPool || !userAddress) return ethers.BigNumber.from(0);
+    // Get expected ETH out for swap
+    const getETHOut = useCallback(async (tokenId, voucherAmount) => {
+        if (!liquidityPool) return ethers.BigNumber.from(0);
 
         try {
-            return await voucherPool.getUserLpBalance(userAddress, tokenId);
+            return await liquidityPool.getETHOut(tokenId, voucherAmount);
         } catch (error) {
-            console.error('Failed to get LP balance:', error);
+            console.error('Failed to get ETH out:', error);
             return ethers.BigNumber.from(0);
         }
-    }, [voucherPool]);
+    }, [liquidityPool]);
+
+    // Get expected vouchers out for swap
+    const getVouchersOut = useCallback(async (tokenId, ethAmount) => {
+        if (!liquidityPool) return ethers.BigNumber.from(0);
+
+        try {
+            return await liquidityPool.getVouchersOut(tokenId, ethAmount);
+        } catch (error) {
+            console.error('Failed to get vouchers out:', error);
+            return ethers.BigNumber.from(0);
+        }
+    }, [liquidityPool]);
+
+    // Get LP shares for user
+    const getLPShares = useCallback(async (userAddress, tokenId) => {
+        if (!liquidityPool || !userAddress) return ethers.BigNumber.from(0);
+
+        try {
+            return await liquidityPool.liquidityShares(tokenId, userAddress);
+        } catch (error) {
+            console.error('Failed to get LP shares:', error);
+            return ethers.BigNumber.from(0);
+        }
+    }, [liquidityPool]);
 
     // Swap voucher for ETH
     const swapVoucherForETH = useCallback(async (tokenId, voucherAmount, minEthOut) => {
-        if (!voucherPool) throw new Error('Contract not initialized');
+        if (!liquidityPool) throw new Error('Contract not initialized');
 
         setIsLoading(true);
         try {
-            const tx = await voucherPool.swapVoucherForETH(tokenId, voucherAmount, minEthOut);
+            const tx = await liquidityPool.swapVoucherForETH(tokenId, voucherAmount, minEthOut);
             await tx.wait();
             return tx;
         } catch (error) {
@@ -107,15 +135,15 @@ export const useContract = (signer, provider) => {
         } finally {
             setIsLoading(false);
         }
-    }, [voucherPool]);
+    }, [liquidityPool]);
 
     // Swap ETH for voucher
     const swapETHForVoucher = useCallback(async (tokenId, ethAmount, minVoucherOut) => {
-        if (!voucherPool) throw new Error('Contract not initialized');
+        if (!liquidityPool) throw new Error('Contract not initialized');
 
         setIsLoading(true);
         try {
-            const tx = await voucherPool.swapETHForVoucher(tokenId, minVoucherOut, {
+            const tx = await liquidityPool.swapETHForVoucher(tokenId, minVoucherOut, {
                 value: ethAmount,
             });
             await tx.wait();
@@ -125,15 +153,15 @@ export const useContract = (signer, provider) => {
         } finally {
             setIsLoading(false);
         }
-    }, [voucherPool]);
+    }, [liquidityPool]);
 
     // Add liquidity
     const addLiquidity = useCallback(async (tokenId, voucherAmount, ethAmount) => {
-        if (!voucherPool) throw new Error('Contract not initialized');
+        if (!liquidityPool) throw new Error('Contract not initialized');
 
         setIsLoading(true);
         try {
-            const tx = await voucherPool.addLiquidity(tokenId, voucherAmount, {
+            const tx = await liquidityPool.addLiquidity(tokenId, voucherAmount, {
                 value: ethAmount,
             });
             await tx.wait();
@@ -143,15 +171,15 @@ export const useContract = (signer, provider) => {
         } finally {
             setIsLoading(false);
         }
-    }, [voucherPool]);
+    }, [liquidityPool]);
 
     // Remove liquidity
-    const removeLiquidity = useCallback(async (tokenId, lpAmount) => {
-        if (!voucherPool) throw new Error('Contract not initialized');
+    const removeLiquidity = useCallback(async (tokenId, shares) => {
+        if (!liquidityPool) throw new Error('Contract not initialized');
 
         setIsLoading(true);
         try {
-            const tx = await voucherPool.removeLiquidity(tokenId, lpAmount);
+            const tx = await liquidityPool.removeLiquidity(tokenId, shares);
             await tx.wait();
             return tx;
         } catch (error) {
@@ -159,21 +187,41 @@ export const useContract = (signer, provider) => {
         } finally {
             setIsLoading(false);
         }
-    }, [voucherPool]);
+    }, [liquidityPool]);
+
+    // Redeem voucher
+    const redeemVoucher = useCallback(async (tokenId) => {
+        if (!liquidityPool) throw new Error('Contract not initialized');
+
+        setIsLoading(true);
+        try {
+            const tx = await liquidityPool.redeemVoucher(tokenId);
+            const receipt = await tx.wait();
+            return { tx, receipt };
+        } catch (error) {
+            throw new Error(handleContractError(error));
+        } finally {
+            setIsLoading(false);
+        }
+    }, [liquidityPool]);
 
     return {
         voucherToken,
-        voucherPool,
+        liquidityPool,
+        escrow,
         isApproved,
         isLoading,
         checkPoolApproval,
         approve,
         getVoucherBalance,
         getReserves,
-        getLpBalance,
+        getETHOut,
+        getVouchersOut,
+        getLPShares,
         swapVoucherForETH,
         swapETHForVoucher,
         addLiquidity,
         removeLiquidity,
+        redeemVoucher,
     };
 };

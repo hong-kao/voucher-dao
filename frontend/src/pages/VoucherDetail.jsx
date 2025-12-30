@@ -36,13 +36,16 @@ const VoucherDetail = () => {
 
             // Load on-chain data
             const res = await contract.getReserves(tokenId);
-            setReserves(res);
+            setReserves({
+                voucherReserve: res.voucherReserve?.toString() || '0',
+                ethReserve: res.ethReserve?.toString() || '0'
+            });
 
             if (account) {
                 const balance = await contract.getVoucherBalance(account, tokenId);
-                const lp = await contract.getLpBalance(account, tokenId);
-                setUserBalance(balance.toString());
-                setLpBalance(lp.toString());
+                const lp = await contract.getLPShares(account, tokenId);
+                setUserBalance(balance?.toString() || '0');
+                setLpBalance(lp?.toString() || '0');
             }
         } catch (err) {
             console.error('Failed to load voucher:', err);
@@ -65,11 +68,31 @@ const VoucherDetail = () => {
     const calculatePrice = () => {
         if (!reserves.voucherReserve || reserves.voucherReserve === '0') return '0';
 
-        const price = ethers.BigNumber.from(reserves.ethReserve)
-            .mul(ethers.constants.WeiPerEther)
-            .div(ethers.BigNumber.from(reserves.voucherReserve));
+        try {
+            const voucherBN = ethers.BigNumber.from(reserves.voucherReserve);
+            const ethBN = ethers.BigNumber.from(reserves.ethReserve);
+            const price = ethBN.mul(ethers.constants.WeiPerEther).div(voucherBN);
+            return ethers.utils.formatEther(price);
+        } catch {
+            return '0';
+        }
+    };
 
-        return ethers.utils.formatEther(price);
+    const formatBalance = (balance) => {
+        try {
+            // For voucher balance, just show the number
+            return balance;
+        } catch {
+            return '0';
+        }
+    };
+
+    const formatEth = (wei) => {
+        try {
+            return ethers.utils.formatEther(wei);
+        } catch {
+            return '0';
+        }
     };
 
     if (isLoading) {
@@ -117,7 +140,7 @@ const VoucherDetail = () => {
                     <div className="voucher-header-right">
                         <h1 className="voucher-title">{voucher.store}</h1>
                         <p className="voucher-face-value">
-                            {voucher.faceValue.toLocaleString()} {voucher.currency}
+                            {voucher.faceValue?.toLocaleString() || voucher.face_value?.toLocaleString() || '0'} {voucher.currency}
                         </p>
                         {voucher.description && (
                             <p className="voucher-description">{voucher.description}</p>
@@ -127,7 +150,7 @@ const VoucherDetail = () => {
                             <div className="stat-box">
                                 <span className="stat-label">Your Balance</span>
                                 <span className="stat-value">
-                                    {parseFloat(ethers.utils.formatEther(userBalance || '0')).toFixed(2)}
+                                    {formatBalance(userBalance)} vouchers
                                 </span>
                             </div>
                             <div className="stat-box">
@@ -137,13 +160,13 @@ const VoucherDetail = () => {
                             <div className="stat-box">
                                 <span className="stat-label">Pool Liquidity</span>
                                 <span className="stat-value">
-                                    {parseFloat(ethers.utils.formatEther(reserves.ethReserve || '0')).toFixed(4)} ETH
+                                    {parseFloat(formatEth(reserves.ethReserve)).toFixed(4)} ETH
                                 </span>
                             </div>
                             <div className="stat-box">
-                                <span className="stat-label">Your LP Tokens</span>
+                                <span className="stat-label">Your LP Shares</span>
                                 <span className="stat-value">
-                                    {parseFloat(ethers.utils.formatEther(lpBalance || '0')).toFixed(4)}
+                                    {formatBalance(lpBalance)}
                                 </span>
                             </div>
                         </div>

@@ -5,98 +5,118 @@ import { ethers } from 'ethers';
  * Formula: price = ethReserve / voucherReserve
  */
 export const calculatePrice = (voucherReserve, ethReserve) => {
-    if (!voucherReserve || voucherReserve === '0') return '0';
+    if (!voucherReserve || voucherReserve === '0' || voucherReserve === 0n) return ethers.BigNumber.from(0);
 
-    const voucherBN = ethers.BigNumber.from(voucherReserve);
-    const ethBN = ethers.BigNumber.from(ethReserve);
-
-    // Return price with 18 decimals precision
-    return ethBN.mul(ethers.constants.WeiPerEther).div(voucherBN);
+    try {
+        const voucherBN = ethers.BigNumber.from(voucherReserve.toString());
+        const ethBN = ethers.BigNumber.from(ethReserve.toString());
+        return ethBN.mul(ethers.constants.WeiPerEther).div(voucherBN);
+    } catch {
+        return ethers.BigNumber.from(0);
+    }
 };
 
 /**
  * Calculate swap output using constant product formula (x * y = k)
  * Uniswap V2 style with 0.3% fee
- * 
- * Formula: amountOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997)
  */
 export const calculateSwapOutput = (amountIn, reserveIn, reserveOut, feePercent = 0.3) => {
     if (!amountIn || !reserveIn || !reserveOut) return ethers.BigNumber.from(0);
 
-    const amountInBN = ethers.BigNumber.from(amountIn);
-    const reserveInBN = ethers.BigNumber.from(reserveIn);
-    const reserveOutBN = ethers.BigNumber.from(reserveOut);
+    try {
+        const amountInBN = ethers.BigNumber.from(amountIn.toString());
+        const reserveInBN = ethers.BigNumber.from(reserveIn.toString());
+        const reserveOutBN = ethers.BigNumber.from(reserveOut.toString());
 
-    // Calculate fee multiplier (997 = 1000 - 3 for 0.3% fee)
-    const feeMultiplier = 1000 - Math.floor(feePercent * 10);
+        const feeMultiplier = 1000 - Math.floor(feePercent * 10);
+        const amountInWithFee = amountInBN.mul(feeMultiplier);
+        const numerator = amountInWithFee.mul(reserveOutBN);
+        const denominator = reserveInBN.mul(1000).add(amountInWithFee);
 
-    const amountInWithFee = amountInBN.mul(feeMultiplier);
-    const numerator = amountInWithFee.mul(reserveOutBN);
-    const denominator = reserveInBN.mul(1000).add(amountInWithFee);
-
-    return numerator.div(denominator);
+        return numerator.div(denominator);
+    } catch {
+        return ethers.BigNumber.from(0);
+    }
 };
 
 /**
  * Apply slippage tolerance to an amount
  */
 export const applySlippage = (amount, slippagePercent) => {
-    const amountBN = ethers.BigNumber.from(amount);
-    const slippageBasisPoints = Math.floor(slippagePercent * 100); // Convert to basis points
-    const slippageAmount = amountBN.mul(slippageBasisPoints).div(10000);
-
-    return amountBN.sub(slippageAmount);
+    try {
+        const amountBN = ethers.BigNumber.from(amount.toString());
+        const slippageBasisPoints = Math.floor(slippagePercent * 100);
+        const slippageAmount = amountBN.mul(slippageBasisPoints).div(10000);
+        return amountBN.sub(slippageAmount);
+    } catch {
+        return ethers.BigNumber.from(0);
+    }
 };
 
 /**
  * Calculate the optimal liquidity ratio
- * Returns the ratio of vouchers to ETH based on current reserves
  */
 export const calculateLiquidityRatio = (voucherReserve, ethReserve) => {
     if (!voucherReserve || !ethReserve) return { voucherRatio: 1, ethRatio: 1 };
 
-    const voucherBN = ethers.BigNumber.from(voucherReserve);
-    const ethBN = ethers.BigNumber.from(ethReserve);
+    try {
+        const voucherBN = ethers.BigNumber.from(voucherReserve.toString());
+        const ethBN = ethers.BigNumber.from(ethReserve.toString());
 
-    return {
-        voucherReserve: voucherBN,
-        ethReserve: ethBN,
-        ratio: voucherBN.mul(ethers.constants.WeiPerEther).div(ethBN)
-    };
+        return {
+            voucherReserve: voucherBN,
+            ethReserve: ethBN,
+            ratio: voucherBN.mul(ethers.constants.WeiPerEther).div(ethBN)
+        };
+    } catch {
+        return { voucherRatio: 1, ethRatio: 1 };
+    }
 };
 
 /**
  * Calculate the amount of vouchers needed for a given ETH amount to maintain ratio
  */
 export const calculateVoucherAmountForEth = (ethAmount, voucherReserve, ethReserve) => {
-    if (!ethReserve || ethReserve === '0') return ethers.BigNumber.from(0);
+    if (!ethReserve || ethReserve === '0' || ethReserve === 0n) return ethers.BigNumber.from(0);
 
-    const ethAmountBN = ethers.BigNumber.from(ethAmount);
-    const voucherReserveBN = ethers.BigNumber.from(voucherReserve);
-    const ethReserveBN = ethers.BigNumber.from(ethReserve);
+    try {
+        const ethAmountBN = ethers.BigNumber.from(ethAmount.toString());
+        const voucherReserveBN = ethers.BigNumber.from(voucherReserve.toString());
+        const ethReserveBN = ethers.BigNumber.from(ethReserve.toString());
 
-    return ethAmountBN.mul(voucherReserveBN).div(ethReserveBN);
+        return ethAmountBN.mul(voucherReserveBN).div(ethReserveBN);
+    } catch {
+        return ethers.BigNumber.from(0);
+    }
 };
 
 /**
  * Calculate the amount of ETH needed for a given voucher amount to maintain ratio
  */
 export const calculateEthAmountForVoucher = (voucherAmount, voucherReserve, ethReserve) => {
-    if (!voucherReserve || voucherReserve === '0') return ethers.BigNumber.from(0);
+    if (!voucherReserve || voucherReserve === '0' || voucherReserve === 0n) return ethers.BigNumber.from(0);
 
-    const voucherAmountBN = ethers.BigNumber.from(voucherAmount);
-    const voucherReserveBN = ethers.BigNumber.from(voucherReserve);
-    const ethReserveBN = ethers.BigNumber.from(ethReserve);
+    try {
+        const voucherAmountBN = ethers.BigNumber.from(voucherAmount.toString());
+        const voucherReserveBN = ethers.BigNumber.from(voucherReserve.toString());
+        const ethReserveBN = ethers.BigNumber.from(ethReserve.toString());
 
-    return voucherAmountBN.mul(ethReserveBN).div(voucherReserveBN);
+        return voucherAmountBN.mul(ethReserveBN).div(voucherReserveBN);
+    } catch {
+        return ethers.BigNumber.from(0);
+    }
 };
 
 /**
- * Format price for display (convert from wei to readable format)
+ * Format price for display
  */
 export const formatPrice = (priceInWei) => {
     if (!priceInWei) return '0';
-    return ethers.utils.formatEther(priceInWei);
+    try {
+        return ethers.utils.formatEther(priceInWei);
+    } catch {
+        return '0';
+    }
 };
 
 /**
@@ -105,19 +125,25 @@ export const formatPrice = (priceInWei) => {
 export const calculatePriceImpact = (amountIn, reserveIn, reserveOut) => {
     if (!amountIn || !reserveIn || !reserveOut) return 0;
 
-    const amountOut = calculateSwapOutput(amountIn, reserveIn, reserveOut);
+    try {
+        const amountOut = calculateSwapOutput(amountIn, reserveIn, reserveOut);
+        const spotPriceBefore = calculatePrice(reserveIn, reserveOut);
 
-    // Calculate spot price before swap
-    const spotPriceBefore = calculatePrice(reserveIn, reserveOut);
+        if (spotPriceBefore.isZero()) return 0;
 
-    // Calculate effective price (what you actually get)
-    const amountInBN = ethers.BigNumber.from(amountIn);
-    const effectivePrice = amountOut.mul(ethers.constants.WeiPerEther).div(amountInBN);
+        const amountInBN = ethers.BigNumber.from(amountIn.toString());
+        if (amountInBN.isZero()) return 0;
 
-    // Price impact = (effectivePrice - spotPrice) / spotPrice * 100
-    const impact = effectivePrice.sub(spotPriceBefore).mul(10000).div(spotPriceBefore);
+        const effectivePrice = amountOut.mul(ethers.constants.WeiPerEther).div(amountInBN);
+        const diff = effectivePrice.gt(spotPriceBefore)
+            ? effectivePrice.sub(spotPriceBefore)
+            : spotPriceBefore.sub(effectivePrice);
+        const impact = diff.mul(10000).div(spotPriceBefore);
 
-    return parseFloat(ethers.utils.formatUnits(impact.abs(), 2));
+        return impact.toNumber() / 100;
+    } catch {
+        return 0;
+    }
 };
 
 /**
@@ -128,17 +154,22 @@ export const validateSwapAmount = (amount, balance, reserves) => {
 
     if (!amount || amount === '0') {
         errors.push('Enter an amount');
+        return errors;
     }
 
-    const amountBN = ethers.BigNumber.from(amount || '0');
-    const balanceBN = ethers.BigNumber.from(balance || '0');
+    try {
+        const amountBN = ethers.BigNumber.from(amount.toString());
+        const balanceBN = ethers.BigNumber.from((balance || 0).toString());
 
-    if (amountBN.gt(balanceBN)) {
-        errors.push('Insufficient balance');
-    }
+        if (amountBN.gt(balanceBN)) {
+            errors.push('Insufficient balance');
+        }
 
-    if (reserves && amountBN.gte(ethers.BigNumber.from(reserves))) {
-        errors.push('Amount exceeds liquidity');
+        if (reserves && amountBN.gte(ethers.BigNumber.from(reserves.toString()))) {
+            errors.push('Amount exceeds liquidity');
+        }
+    } catch {
+        errors.push('Invalid amount');
     }
 
     return errors;

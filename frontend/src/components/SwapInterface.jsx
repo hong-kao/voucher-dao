@@ -25,17 +25,24 @@ const SwapInterface = ({ tokenId, voucherName }) => {
         const loadData = async () => {
             if (!tokenId) return;
 
-            const res = await contract.getReserves(tokenId);
-            setReserves(res);
+            try {
+                const res = await contract.getReserves(tokenId);
+                setReserves({
+                    voucherReserve: res.voucherReserve?.toString() || '0',
+                    ethReserve: res.ethReserve?.toString() || '0'
+                });
 
-            if (account) {
-                if (swapDirection === 'voucherToEth') {
-                    const bal = await contract.getVoucherBalance(account, tokenId);
-                    setBalance(bal.toString());
-                } else {
-                    const bal = await provider.getBalance(account);
-                    setBalance(bal.toString());
+                if (account) {
+                    if (swapDirection === 'voucherToEth') {
+                        const bal = await contract.getVoucherBalance(account, tokenId);
+                        setBalance(bal?.toString() || '0');
+                    } else {
+                        const bal = await provider.getBalance(account);
+                        setBalance(bal?.toString() || '0');
+                    }
                 }
+            } catch (err) {
+                console.error('Failed to load data:', err);
             }
         };
 
@@ -79,14 +86,16 @@ const SwapInterface = ({ tokenId, voucherName }) => {
     const handleMaxClick = () => {
         if (balance === '0') return;
 
-        let maxAmount = balance;
-        if (swapDirection === 'ethToVoucher') {
-            const balanceBN = ethers.BigNumber.from(balance);
-            const gasReserve = ethers.utils.parseEther('0.01');
-            maxAmount = balanceBN.sub(gasReserve).toString();
+        try {
+            let maxAmount = ethers.BigNumber.from(balance);
+            if (swapDirection === 'ethToVoucher') {
+                const gasReserve = ethers.utils.parseEther('0.01');
+                maxAmount = maxAmount.gt(gasReserve) ? maxAmount.sub(gasReserve) : ethers.BigNumber.from(0);
+            }
+            setInputAmount(ethers.utils.formatEther(maxAmount));
+        } catch (err) {
+            console.error('Error setting max:', err);
         }
-
-        setInputAmount(ethers.utils.formatEther(maxAmount));
     };
 
     const handleSwap = async () => {
@@ -124,7 +133,10 @@ const SwapInterface = ({ tokenId, voucherName }) => {
             setTxHash(tx.hash);
 
             const res = await contract.getReserves(tokenId);
-            setReserves(res);
+            setReserves({
+                voucherReserve: res.voucherReserve?.toString() || '0',
+                ethReserve: res.ethReserve?.toString() || '0'
+            });
             setInputAmount('');
             setOutputAmount('0');
         } catch (err) {
@@ -137,6 +149,14 @@ const SwapInterface = ({ tokenId, voucherName }) => {
     const inputToken = swapDirection === 'voucherToEth' ? voucherName : 'ETH';
     const outputToken = swapDirection === 'voucherToEth' ? 'ETH' : voucherName;
 
+    const formatBalance = (bal) => {
+        try {
+            return parseFloat(ethers.utils.formatEther(bal || '0')).toFixed(4);
+        } catch {
+            return '0';
+        }
+    };
+
     return (
         <div className="swap-interface glass-card">
             <h3 className="swap-title">SWAP</h3>
@@ -146,7 +166,7 @@ const SwapInterface = ({ tokenId, voucherName }) => {
                     <div className="input-header">
                         <label className="input-label">FROM</label>
                         <span className="balance-label">
-                            BALANCE: {parseFloat(ethers.utils.formatEther(balance || '0')).toFixed(4)}
+                            BALANCE: {formatBalance(balance)}
                         </span>
                     </div>
                     <div className="swap-input-wrapper">
@@ -249,7 +269,7 @@ const SwapInterface = ({ tokenId, voucherName }) => {
                 <div className="swap-success">
                     SWAP SUCCESSFUL!{' '}
                     <a
-                        href={`https://etherscan.io/tx/${txHash}`}
+                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                     >
